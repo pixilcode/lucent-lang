@@ -1,0 +1,6 @@
+[package]
+name = "clox"
+version = "0.1.0"
+authors = ["Brendon Bown <bhbochikens@gmail.com>"]
+
+[dependencies]
