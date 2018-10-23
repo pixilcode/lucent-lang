@@ -1,3 +1,4 @@
+// TODO Move all of this to VM module
 pub type Value = f64;
 
 pub fn string_from(value: Value) -> String {

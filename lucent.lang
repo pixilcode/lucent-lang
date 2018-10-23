@@ -1,0 +1,6 @@
+program → 	(structDecl structDef?
+			| enumDecl enumDef?
+			| functionDef
+			| constDef)* EOF
+			
+			

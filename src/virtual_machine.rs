@@ -5,28 +5,26 @@ use value::{self, Value};
 const STACK_MAX: usize = 256;
 
 pub struct VM {
-    chunk: Chunk,
     debug: DebugFlags,
 }
 
 impl VM {
-    fn new(chunk: Chunk, debug: DebugFlags) -> Self {
-        VM { chunk, debug }
+    pub fn new() -> Self {
+        VM {
+            debug: DebugFlags::new(),
+        }
     }
 
-    pub fn interpret(chunk: Chunk) -> VMResult {
-        let vm = VM::new(chunk, DebugFlags::new());
+    pub fn new_debugger(debug: DebugFlags) -> Self {
+        VM { debug }
+    }
+
+    pub fn interpret(&self, chunk: Chunk) -> VMResult {
         let ip = 0;
-        vm.run(ip)
+        self.run(chunk, ip)
     }
 
-    pub fn debug(chunk: Chunk, debug: DebugFlags) -> VMResult {
-        let vm = VM::new(chunk, debug);
-        let ip = 0;
-        vm.run(ip)
-    }
-
-    fn run(&self, ip: usize) -> VMResult {
+    fn run(&self, chunk: Chunk, ip: usize) -> VMResult {
         let mut stack: Stack = Stack::new();
         let mut ip = ip;
         loop {
@@ -44,11 +42,11 @@ impl VM {
             }
 
             if self.debug.print_instructions {
-                let (_, command) = disassemble_instruction(&self.chunk, ip, String::new());
+                let (_, command) = disassemble_instruction(&chunk, ip, String::new());
                 print!("{}", command);
             }
 
-            let opcode = OpCode::from(match self.chunk.get_byte(ip) {
+            let opcode = OpCode::from(match chunk.get_byte(ip) {
                 Some(i) => i,
                 None => return VMResult::RuntimeError,
             });
@@ -72,11 +70,11 @@ impl VM {
                     });
                 }
                 OpCode::OpConstant => {
-                    let constant = match self.chunk.get_byte(ip) {
+                    let constant = match chunk.get_byte(ip) {
                         Some(i) => i,
                         None => return VMResult::RuntimeError,
                     };
-                    let constant = match self.chunk.get_constant(constant as usize) {
+                    let constant = match chunk.get_constant(constant as usize) {
                         Some(i) => i,
                         None => return VMResult::RuntimeError,
                     };
@@ -92,21 +90,19 @@ impl VM {
                     ip + 1
                 }
                 OpCode::OpConstantLong => {
-                    let first_byte = match self.chunk.get_byte(ip) {
+                    let first_byte = match chunk.get_byte(ip) {
                         Some(i) => i,
                         None => return VMResult::RuntimeError,
                     };
-                    let second_byte = match self.chunk.get_byte(ip + 1) {
+                    let second_byte = match chunk.get_byte(ip + 1) {
                         Some(i) => i,
                         None => return VMResult::RuntimeError,
                     };
-                    let constant = match self
-                        .chunk
-                        .get_long_constant(first_byte as usize, second_byte as usize)
-                    {
-                        Some(i) => i,
-                        None => return VMResult::RuntimeError,
-                    };
+                    let constant =
+                        match chunk.get_long_constant(first_byte as usize, second_byte as usize) {
+                            Some(i) => i,
+                            None => return VMResult::RuntimeError,
+                        };
 
                     if let Err(_) = stack.push(constant) {
                         return VMResult::RuntimeError;
@@ -292,7 +288,7 @@ mod tests {
     }
 
     fn return_equals(val: Value, chunk: Chunk) {
-        if let VMResult::Okay(i) = VM::interpret(chunk) {
+        if let VMResult::Okay(i) = VM::new().interpret(chunk) {
             assert_eq!(val, i);
         } else {
             panic!("return resulted in an error")
