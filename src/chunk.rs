@@ -1,8 +1,8 @@
 // TODO Move this to VM module
 
 use std::convert::From;
-use value::Value;
-use value::ValueArray;
+use crate::value::Value;
+use crate::value::ValueArray;
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub enum OpCode {

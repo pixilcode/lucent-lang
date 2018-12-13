@@ -5,7 +5,7 @@ use clox::compiler;
 use clox::virtual_machine::VM;
 
 pub fn run() {
-    let vm = VM::new();
+    let _vm = VM::new();
 
     loop {
         print!(">> ");
@@ -18,7 +18,7 @@ pub fn run() {
         };
         let code = code.trim();
 
-        if code == "quit()" {
+        if code == ":quit" {
             break;
         }
 

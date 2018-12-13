@@ -1,6 +1,6 @@
-use chunk::{Chunk, OpCode};
-use disassembler::disassemble_instruction;
-use value::{self, Value};
+use crate::chunk::{Chunk, OpCode};
+use crate::disassembler::disassemble_instruction;
+use crate::value::{self, Value};
 
 const STACK_MAX: usize = 256;
 

@@ -1,5 +1,4 @@
-use chunk::Chunk;
-use chunk::OpCode;
+use crate::chunk::{Chunk, OpCode};
 
 pub fn disassemble_chunk(chunk: &Chunk, header: &str) -> String {
     let result = format!("== {} ==\n", header);

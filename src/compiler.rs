@@ -1,6 +1,6 @@
-use chunk::Chunk;
-use scanner::Scanner;
+use crate::chunk::Chunk;
+use crate::scanner::Scanner;
 
-pub fn compile(scanner: Scanner) -> Chunk {
+pub fn compile(_scanner: Scanner) -> Chunk {
 	Chunk::new()
 }

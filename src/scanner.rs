@@ -97,7 +97,7 @@ impl Scanner {
 	}
 	
 	fn skip_whitespace(self) -> Self {
-		
+		self
 	}
 	
 	fn add_token(self, t_type: TokenType, start: usize, current: usize) -> Self {
