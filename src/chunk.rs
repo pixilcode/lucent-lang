@@ -6,14 +6,14 @@ use value::ValueArray;
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub enum OpCode {
-    OpConstant,
-    OpConstantLong,
-    OpReturn,
-    OpNegate,
-    OpAdd,
-    OpSubtract,
-    OpMultiply,
-    OpDivide,
+    Constant,
+    ConstantLong,
+    Return,
+    Negate,
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
     UnexpectedEndOfChunk,
     Invalid(u8),
 }
@@ -21,14 +21,14 @@ pub enum OpCode {
 impl OpCode {
     pub fn to_byte(&self) -> u8 {
         match self {
-            OpCode::OpConstant => 0,
-            OpCode::OpConstantLong => 1,
-            OpCode::OpReturn => 2,
-            OpCode::OpNegate => 3,
-            OpCode::OpAdd => 4,
-            OpCode::OpSubtract => 5,
-            OpCode::OpMultiply => 6,
-            OpCode::OpDivide => 7,
+            OpCode::Constant => 0,
+            OpCode::ConstantLong => 1,
+            OpCode::Return => 2,
+            OpCode::Negate => 3,
+            OpCode::Add => 4,
+            OpCode::Subtract => 5,
+            OpCode::Multiply => 6,
+            OpCode::Divide => 7,
             OpCode::UnexpectedEndOfChunk => 255,
             OpCode::Invalid(code) => *code,
         }
@@ -38,14 +38,14 @@ impl OpCode {
 impl From<u8> for OpCode {
     fn from(byte: u8) -> OpCode {
         match byte {
-            0 => OpCode::OpConstant,
-            1 => OpCode::OpConstantLong,
-            2 => OpCode::OpReturn,
-            3 => OpCode::OpNegate,
-            4 => OpCode::OpAdd,
-            5 => OpCode::OpSubtract,
-            6 => OpCode::OpMultiply,
-            7 => OpCode::OpDivide,
+            0 => OpCode::Constant,
+            1 => OpCode::ConstantLong,
+            2 => OpCode::Return,
+            3 => OpCode::Negate,
+            4 => OpCode::Add,
+            5 => OpCode::Subtract,
+            6 => OpCode::Multiply,
+            7 => OpCode::Divide,
             255 => OpCode::UnexpectedEndOfChunk,
             _ => OpCode::Invalid(byte),
         }
@@ -76,10 +76,10 @@ impl Chunk {
     pub fn write_constant(mut self, constant: Value, line: u32) -> Self {
         let location = self.constants.write_value(constant);
         if location <= u8::max_value() as usize {
-            self.write_byte(OpCode::OpConstant.to_byte(), line);
+            self.write_byte(OpCode::Constant.to_byte(), line);
             self.write_byte(location as u8, line);
         } else {
-            self.write_byte(OpCode::OpConstantLong.to_byte(), line);
+            self.write_byte(OpCode::ConstantLong.to_byte(), line);
             self.write_byte((location >> 8) as u8, line);
             self.write_byte(location as u8, line);
         }
@@ -124,21 +124,21 @@ mod tests {
     #[test]
     fn test_chunks() {
         let chunk = Chunk::new();
-        let chunk = chunk.write_chunk(OpCode::OpReturn, 1);
-        assert_eq!(OpCode::OpReturn.to_byte(), chunk.get_byte(0).unwrap());
+        let chunk = chunk.write_chunk(OpCode::Return, 1);
+        assert_eq!(OpCode::Return.to_byte(), chunk.get_byte(0).unwrap());
     }
 
     #[test]
     fn test_op_codes() {
         let mut map = HashMap::new();
-        map.insert(OpCode::OpConstant, 0);
-        map.insert(OpCode::OpConstantLong, 1);
-        map.insert(OpCode::OpReturn, 2);
-        map.insert(OpCode::OpNegate, 3);
-        map.insert(OpCode::OpAdd, 4);
-        map.insert(OpCode::OpSubtract, 5);
-        map.insert(OpCode::OpMultiply, 6);
-        map.insert(OpCode::OpDivide, 7);
+        map.insert(OpCode::Constant, 0);
+        map.insert(OpCode::ConstantLong, 1);
+        map.insert(OpCode::Return, 2);
+        map.insert(OpCode::Negate, 3);
+        map.insert(OpCode::Add, 4);
+        map.insert(OpCode::Subtract, 5);
+        map.insert(OpCode::Multiply, 6);
+        map.insert(OpCode::Divide, 7);
         map.insert(OpCode::Invalid(254), 254);
         map.insert(OpCode::UnexpectedEndOfChunk, 255);
 
@@ -154,7 +154,7 @@ mod tests {
         let chunk = Chunk::new();
         let chunk = chunk.write_constant(1.2, 1);
 
-        assert_eq!(OpCode::OpConstant.to_byte(), chunk.get_byte(0).unwrap());
+        assert_eq!(OpCode::Constant.to_byte(), chunk.get_byte(0).unwrap());
         assert_eq!(
             1.2,
             chunk
@@ -170,7 +170,7 @@ mod tests {
         let chunk = chunk.write_constant(0f64, 1);
 
         assert_eq!(
-            OpCode::OpConstantLong.to_byte(),
+            OpCode::ConstantLong.to_byte(),
             chunk.get_byte(512).unwrap()
         );
         assert_eq!(

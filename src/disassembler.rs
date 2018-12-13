@@ -51,18 +51,18 @@ pub fn disassemble_instruction(chunk: &Chunk, offset: usize, result: String) -> 
     };
 
     match instruction {
-        OpCode::OpConstant => {
+        OpCode::Constant => {
             return constant_instruction("OP_CONSTANT", false, chunk, offset, result)
         }
-        OpCode::OpConstantLong => {
+        OpCode::ConstantLong => {
             return constant_instruction("OP_CONSTANT", true, chunk, offset, result)
         }
-        OpCode::OpReturn => simple_instruction("OP_RETURN", offset, result),
-        OpCode::OpNegate => simple_instruction("OP_NEGATE", offset, result),
-        OpCode::OpAdd => simple_instruction("OP_ADD", offset, result),
-        OpCode::OpSubtract => simple_instruction("OP_SUBTRACT", offset, result),
-        OpCode::OpMultiply => simple_instruction("OP_MULTIPLY", offset, result),
-        OpCode::OpDivide => simple_instruction("OP_DIVIDE", offset, result),
+        OpCode::Return => simple_instruction("OP_RETURN", offset, result),
+        OpCode::Negate => simple_instruction("OP_NEGATE", offset, result),
+        OpCode::Add => simple_instruction("OP_ADD", offset, result),
+        OpCode::Subtract => simple_instruction("OP_SUBTRACT", offset, result),
+        OpCode::Multiply => simple_instruction("OP_MULTIPLY", offset, result),
+        OpCode::Divide => simple_instruction("OP_DIVIDE", offset, result),
         OpCode::UnexpectedEndOfChunk => (offset + 1, format!("{}UNEXPECTED_END_OF_CHUNK", result)),
         OpCode::Invalid(code) => (offset + 1, format!("{}UNKNOWN_OPCODE {}", result, code)),
     }
@@ -117,7 +117,7 @@ mod tests {
     #[test]
     fn test_disassemble_chunk() {
         let chunk = Chunk::new().write_constant(1.2, 1);
-        let chunk = chunk.write_chunk(OpCode::OpReturn, 1);
+        let chunk = chunk.write_chunk(OpCode::Return, 1);
         assert_eq!(
             "\
 == test code ==

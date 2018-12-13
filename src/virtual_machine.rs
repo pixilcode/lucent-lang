@@ -53,7 +53,7 @@ impl VM {
 
             ip = ip + 1;
             ip = match opcode {
-                OpCode::OpReturn => {
+                OpCode::Return => {
                     /*if self.debug {
                         println!(
                             "{}",
@@ -69,7 +69,7 @@ impl VM {
                         None => 0f64,
                     });
                 }
-                OpCode::OpConstant => {
+                OpCode::Constant => {
                     let constant = match chunk.get_byte(ip) {
                         Some(i) => i,
                         None => return VMResult::RuntimeError,
@@ -89,7 +89,7 @@ impl VM {
 
                     ip + 1
                 }
-                OpCode::OpConstantLong => {
+                OpCode::ConstantLong => {
                     let first_byte = match chunk.get_byte(ip) {
                         Some(i) => i,
                         None => return VMResult::RuntimeError,
@@ -114,7 +114,7 @@ impl VM {
 
                     ip + 2
                 }
-                OpCode::OpNegate => {
+                OpCode::Negate => {
                     let val = match stack.pop() {
                         Some(i) => i,
                         None => return VMResult::RuntimeError,
@@ -124,28 +124,28 @@ impl VM {
                     }
                     ip
                 }
-                OpCode::OpAdd => {
+                OpCode::Add => {
                     stack = match VM::binary_op(stack, |a, b| a + b) {
                         Ok(stack) => stack,
                         Err(result) => return result,
                     };
                     ip
                 }
-                OpCode::OpSubtract => {
+                OpCode::Subtract => {
                     stack = match VM::binary_op(stack, |a, b| a - b) {
                         Ok(stack) => stack,
                         Err(result) => return result,
                     };
                     ip
                 }
-                OpCode::OpMultiply => {
+                OpCode::Multiply => {
                     stack = match VM::binary_op(stack, |a, b| a * b) {
                         Ok(stack) => stack,
                         Err(result) => return result,
                     };
                     ip
                 }
-                OpCode::OpDivide => {
+                OpCode::Divide => {
                     stack = match VM::binary_op(stack, |a, b| a / b) {
                         Ok(stack) => stack,
                         Err(result) => return result,
@@ -262,16 +262,16 @@ mod tests {
     fn test_return() {
         let chunk = Chunk::new()
             .write_constant(1.0, 1)
-            .write_chunk(OpCode::OpReturn, 1);
+            .write_chunk(OpCode::Return, 1);
         return_equals(1.0, chunk);
     }
 
     #[test]
     fn test_math() {
-        test_math_op(OpCode::OpAdd, 1.0, 1.0, 2.0); // 1 + 1 = 2
-        test_math_op(OpCode::OpSubtract, 2.0, 1.0, 1.0); // 2 - 1 = 1
-        test_math_op(OpCode::OpMultiply, 1.0, 2.0, 2.0); // 1 * 2 = 2
-        test_math_op(OpCode::OpDivide, 2.0, 2.0, 1.0); // 2 / 2 = 1
+        test_math_op(OpCode::Add, 1.0, 1.0, 2.0); // 1 + 1 = 2
+        test_math_op(OpCode::Subtract, 2.0, 1.0, 1.0); // 2 - 1 = 1
+        test_math_op(OpCode::Multiply, 1.0, 2.0, 2.0); // 1 * 2 = 2
+        test_math_op(OpCode::Divide, 2.0, 2.0, 1.0); // 2 / 2 = 1
     }
 
     fn test_math_op(op: OpCode, operand_a: Value, operand_b: Value, result: Value) {
@@ -284,7 +284,7 @@ mod tests {
             .write_constant(a, 1)
             .write_constant(b, 1)
             .write_chunk(op, 1)
-            .write_chunk(OpCode::OpReturn, 1)
+            .write_chunk(OpCode::Return, 1)
     }
 
     fn return_equals(val: Value, chunk: Chunk) {

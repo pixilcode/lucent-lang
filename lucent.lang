@@ -1,6 +1,33 @@
-program → 	(structDecl structDef?
-			| enumDecl enumDef?
-			| functionDef
-			| constDef)* EOF
-			
-			
+program → 		(structDecl structDef?
+				| enumDecl enumDef?
+				| functionDef
+				| constDef)* EOF
+
+
+
+structDecl →	"struct" identifier "{"
+					(matchExpr ",")*
+				"}"
+
+structDef →		"define" identifier "{"
+					(constDef
+					| constructor
+					| functionDef)*
+				"}"
+
+constructor →	identifier "(" arguments ")" (";" | "{"
+					expression+
+				"}"
+
+
+
+enumDecl →		"enum" identifier "{"
+					(enum ",")*
+				"}"
+
+enumDef →		"define" identifier "{"
+					(constDef
+					| functionDef)*
+				"}"
+
+enum →			identifier ("(" (matchExpr ",")* matchExpr ")")

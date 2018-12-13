@@ -1,5 +1,6 @@
 use chunk::Chunk;
+use scanner::Scanner;
 
-pub fn compile(tokens: Vec<Tokens>) -> Chunk {
+pub fn compile(scanner: Scanner) -> Chunk {
 	Chunk::new()
 }

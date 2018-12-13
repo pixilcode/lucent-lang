@@ -1,5 +1,7 @@
 use std::io::{self, Write};
 
+use clox::scanner::{self, TokenType};
+use clox::compiler;
 use clox::virtual_machine::VM;
 
 pub fn run() {
@@ -23,8 +25,17 @@ pub fn run() {
         // Check to see if it is a complete statement
         // and if it doesn't end in a semicolon, add one
         
-        let tokens = scanner.build_scanner(code);
-        let chunks = compiler.compile(tokens);
-        let result = vm.interpret(chunks);
+        let mut tokens = scanner::build_scanner(code.to_string());
+        
+        loop {
+			if tokens.current_token().token_type() == TokenType::EOF {
+				break;
+			}
+			
+			println!("{:?}", tokens.current_token());
+			tokens = tokens.scan_token();
+        }
+        //let chunks = compiler::compile(tokens);
+        //let result = vm.interpret(chunks);
     }
 }
