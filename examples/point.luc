@@ -1,0 +1,49 @@
+impure fn main() {
+	let (x1, y1) = get_point_one();
+	let p1 = get_point_one();
+	
+	let {x: x2, y: y2} = get_point_two();
+	let p2 = get_point_two();
+	
+	let p3 = get_point_three();
+	
+	assert p1(0) == x1;
+	assert p1(1) == y1;
+	
+	assert p2.x == x2;
+	assert p2.y == y2;
+	
+	print_point((x1, y2));
+	print_point(p1);
+	print_point({x: x2, y: y2});
+	print_point(p2);
+}
+
+struct Point {
+	x is Int,
+	y is Int,
+}
+
+fn get_point_one() {
+	(0, 1) // Return a tuple
+}
+
+fn get_point_two() {
+	{x: 1, y: 2} // Return a record
+}
+
+fn get_point_three() {
+	Point {x: 2, y: 3} // Return a Point struct
+}
+
+impure fn print_point(point is (Int, Int)) { // point is an (Int, Int) tuple
+	IO::println("x: ${ point(0) }, y: ${ point(1) }");
+}
+
+impure fn print_point(point is {x, y}) { // point is a record with an x field and a y field
+	IO::println("x: ${ point.x }, y: ${ point.y }");
+}
+
+impure fn print_point(point is Point) { // point is a Point struct
+	IO::println("x: ${ point.x }, y: ${ point.y }")
+}

@@ -1,0 +1,4 @@
+impure fn main() {
+	let name = IO::read_line();
+	IO::println("Hello, ${name}");
+}
