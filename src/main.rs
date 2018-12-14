@@ -14,7 +14,7 @@ fn main() {
     if args.len() == 1 {
         repl::run();
     } else if args.len() == 2 {
-        // run_file(args[1]);
+        run_file(args[1].clone());
     } else {
         eprintln!("Usage: clox [path]");
         process::exit(64);
@@ -27,7 +27,7 @@ fn run_file(path: String) {
     
     let scanner = scanner::build_scanner(source);
     let chunk = compiler::compile(scanner);
-    let result = vm.interpret(chunk);
+    let result = vm.interpret(&chunk);
     
     match result {
         VMResult::Okay(_) => process::exit(0),

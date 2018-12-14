@@ -5,7 +5,14 @@ pub fn string_from(value: Value) -> String {
     format!("{}", value)
 }
 
-#[derive(Debug)]
+pub fn compare_values(a: Value, b: Value, decimal_places: u8) -> bool {
+    let factor = 10.0f64.powi(i32::from(decimal_places));
+    let a = (a * factor).trunc();
+    let b = (b * factor).trunc();
+    (a - b).abs() <= 0.0
+}
+
+#[derive(Default, Debug)]
 pub struct ValueArray(Vec<Value>);
 
 impl ValueArray {

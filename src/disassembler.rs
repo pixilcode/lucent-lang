@@ -3,20 +3,20 @@ use crate::chunk::{Chunk, OpCode};
 pub fn disassemble_chunk(chunk: &Chunk, header: &str) -> String {
     let result = format!("== {} ==\n", header);
 
-    disassemble_loop(chunk, 0, result)
+    disassemble_loop(chunk, 0, result.as_str())
 }
 
-fn disassemble_loop(chunk: &Chunk, instruction: usize, result: String) -> String {
+fn disassemble_loop(chunk: &Chunk, instruction: usize, result: &str) -> String {
     if instruction >= chunk.get_size() {
-        return result;
+        return String::from(result);
     }
 
     let (next, result) = disassemble_instruction(chunk, instruction, result);
 
-    disassemble_loop(chunk, next, result)
+    disassemble_loop(chunk, next, result.as_str())
 }
 
-pub fn disassemble_instruction(chunk: &Chunk, offset: usize, result: String) -> (usize, String) {
+pub fn disassemble_instruction(chunk: &Chunk, offset: usize, result: &str) -> (usize, String) {
     let current_line = match chunk.get_line(offset) {
         Some(line) => line,
         None => 0,
@@ -51,10 +51,10 @@ pub fn disassemble_instruction(chunk: &Chunk, offset: usize, result: String) -> 
 
     match instruction {
         OpCode::Constant => {
-            return constant_instruction("OP_CONSTANT", false, chunk, offset, result)
+            constant_instruction("OP_CONSTANT", false, chunk, offset, result.as_str())
         }
         OpCode::ConstantLong => {
-            return constant_instruction("OP_CONSTANT", true, chunk, offset, result)
+            constant_instruction("OP_CONSTANT", true, chunk, offset, result.as_str())
         }
         OpCode::Return => simple_instruction("OP_RETURN", offset, result),
         OpCode::Negate => simple_instruction("OP_NEGATE", offset, result),
@@ -76,7 +76,7 @@ fn constant_instruction(
     is_long: bool,
     chunk: &Chunk,
     offset: usize,
-    result: String,
+    result: &str,
 ) -> (usize, String) {
     let constant = match chunk.get_byte(offset + 1) {
         Some(i) => i as usize,
@@ -116,7 +116,7 @@ mod tests {
     #[test]
     fn test_disassemble_chunk() {
         let chunk = Chunk::new().write_constant(1.2, 1);
-        let chunk = chunk.write_chunk(OpCode::Return, 1);
+        let chunk = chunk.write_chunk(&OpCode::Return, 1);
         assert_eq!(
             "\
 == test code ==

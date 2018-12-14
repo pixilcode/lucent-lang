@@ -1,8 +1,7 @@
 // TODO Move this to VM module
 
 use std::convert::From;
-use crate::value::Value;
-use crate::value::ValueArray;
+use crate::value::{Value, ValueArray};
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub enum OpCode {
@@ -52,7 +51,7 @@ impl From<u8> for OpCode {
     }
 }
 
-#[derive(Debug)]
+#[derive(Default, Debug)]
 pub struct Chunk {
     code: Vec<u8>,
     lines: Vec<u32>,
@@ -68,7 +67,7 @@ impl Chunk {
         }
     }
 
-    pub fn write_chunk(mut self, op_code: OpCode, line: u32) -> Self {
+    pub fn write_chunk(mut self, op_code: &OpCode, line: u32) -> Self {
         self.write_byte(op_code.to_byte(), line);
         self
     }
@@ -120,11 +119,12 @@ impl Chunk {
 mod tests {
     use super::*;
     use std::collections::hash_map::HashMap;
+    use crate::value::compare_values;
 
     #[test]
     fn test_chunks() {
         let chunk = Chunk::new();
-        let chunk = chunk.write_chunk(OpCode::Return, 1);
+        let chunk = chunk.write_chunk(&OpCode::Return, 1);
         assert_eq!(OpCode::Return.to_byte(), chunk.get_byte(0).unwrap());
     }
 
@@ -143,7 +143,7 @@ mod tests {
         map.insert(OpCode::UnexpectedEndOfChunk, 255);
 
         map.iter().for_each(|(code, byte)| {
-            let chunk = Chunk::new().write_chunk(code.clone(), 1);
+            let chunk = Chunk::new().write_chunk(code, 1);
             assert_eq!(*byte, chunk.get_byte(0).unwrap());
             assert_eq!(*code, OpCode::from(*byte));
         });
@@ -155,12 +155,13 @@ mod tests {
         let chunk = chunk.write_constant(1.2, 1);
 
         assert_eq!(OpCode::Constant.to_byte(), chunk.get_byte(0).unwrap());
-        assert_eq!(
-            1.2,
+        assert!(
+            compare_values(1.2,
             chunk
                 .get_constant(chunk.get_byte(1).unwrap() as usize)
-                .unwrap()
-        )
+                .unwrap(),
+            2)
+        );
     }
 
     #[test]
@@ -173,19 +174,20 @@ mod tests {
             OpCode::ConstantLong.to_byte(),
             chunk.get_byte(512).unwrap()
         );
-        assert_eq!(
-            0f64,
+        assert!(
+            compare_values(0f64,
             chunk
                 .get_long_constant(
                     chunk.get_byte(513).unwrap() as usize,
                     chunk.get_byte(514).unwrap() as usize
-                ).unwrap()
+                ).unwrap(),
+            2)
         );
     }
-
+    
     // A recursive function that writes 'fill' number of constants to a chunk
     fn write_constants(chunk: Chunk, fill: usize) -> Chunk {
-        if fill <= 0 {
+        if fill == 0 {
             chunk
         } else {
             write_constants(chunk.write_constant(fill as f64, 1), fill - 1)

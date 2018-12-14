@@ -1,7 +1,6 @@
 use std::io::{self, Write};
 
 use clox::scanner::{self, TokenType};
-use clox::compiler;
 use clox::virtual_machine::VM;
 
 pub fn run() {

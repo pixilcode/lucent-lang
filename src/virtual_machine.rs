@@ -4,6 +4,7 @@ use crate::value::{self, Value};
 
 const STACK_MAX: usize = 256;
 
+#[derive(Default)]
 pub struct VM {
     debug: DebugFlags,
 }
@@ -19,12 +20,12 @@ impl VM {
         VM { debug }
     }
 
-    pub fn interpret(&self, chunk: Chunk) -> VMResult {
+    pub fn interpret(&self, chunk: &Chunk) -> VMResult {
         let ip = 0;
-        self.run(chunk, ip)
+        self.run(&chunk, ip)
     }
 
-    fn run(&self, chunk: Chunk, ip: usize) -> VMResult {
+    fn run(&self, chunk: &Chunk, ip: usize) -> VMResult {
         let mut stack: Stack = Stack::new();
         let mut ip = ip;
         loop {
@@ -42,7 +43,7 @@ impl VM {
             }
 
             if self.debug.print_instructions {
-                let (_, command) = disassemble_instruction(&chunk, ip, String::new());
+                let (_, command) = disassemble_instruction(&chunk, ip, "");
                 print!("{}", command);
             }
 
@@ -51,7 +52,7 @@ impl VM {
                 None => return VMResult::RuntimeError,
             });
 
-            ip = ip + 1;
+            ip += 1;
             ip = match opcode {
                 OpCode::Return => {
                     /*if self.debug {
@@ -79,7 +80,7 @@ impl VM {
                         None => return VMResult::RuntimeError,
                     };
 
-                    if let Err(_) = stack.push(constant) {
+                    if stack.push(constant).is_err() {
                         return VMResult::RuntimeError;
                     }
 
@@ -104,7 +105,7 @@ impl VM {
                             None => return VMResult::RuntimeError,
                         };
 
-                    if let Err(_) = stack.push(constant) {
+                    if stack.push(constant).is_err() {
                         return VMResult::RuntimeError;
                     }
 
@@ -119,7 +120,7 @@ impl VM {
                         Some(i) => i,
                         None => return VMResult::RuntimeError,
                     };
-                    if let Err(_) = stack.push(-val) {
+                    if stack.push(-val).is_err() {
                         return VMResult::RuntimeError;
                     }
                     ip
@@ -170,7 +171,7 @@ impl VM {
             Some(i) => i,
             None => return Err(VMResult::RuntimeError),
         };
-        if let Err(_) = stack.push(op(a, b)) {
+        if stack.push(op(a, b)).is_err() {
             Err(VMResult::RuntimeError)
         } else {
             Ok(stack)
@@ -209,6 +210,7 @@ impl IntoIterator for Stack {
     }
 }
 
+#[derive(Default)]
 pub struct DebugFlags {
     print_instructions: bool,
     print_stack: bool,
@@ -224,7 +226,7 @@ impl DebugFlags {
         }
     }
 
-    pub fn set_flag(self, flag: DebugFlag, value: bool) -> Self {
+    pub fn set_flag(self, flag: &DebugFlag, value: bool) -> Self {
         match flag {
             DebugFlag::PrintInstructions => DebugFlags {
                 print_instructions: value,
@@ -257,39 +259,40 @@ pub enum VMResult {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::value::compare_values;
 
     #[test]
     fn test_return() {
         let chunk = Chunk::new()
             .write_constant(1.0, 1)
-            .write_chunk(OpCode::Return, 1);
-        return_equals(1.0, chunk);
+            .write_chunk(&OpCode::Return, 1);
+        return_equals(1.0, &chunk);
     }
 
     #[test]
     fn test_math() {
-        test_math_op(OpCode::Add, 1.0, 1.0, 2.0); // 1 + 1 = 2
-        test_math_op(OpCode::Subtract, 2.0, 1.0, 1.0); // 2 - 1 = 1
-        test_math_op(OpCode::Multiply, 1.0, 2.0, 2.0); // 1 * 2 = 2
-        test_math_op(OpCode::Divide, 2.0, 2.0, 1.0); // 2 / 2 = 1
+        test_math_op(&OpCode::Add, 1.0, 1.0, 2.0); // 1 + 1 = 2
+        test_math_op(&OpCode::Subtract, 2.0, 1.0, 1.0); // 2 - 1 = 1
+        test_math_op(&OpCode::Multiply, 1.0, 2.0, 2.0); // 1 * 2 = 2
+        test_math_op(&OpCode::Divide, 2.0, 2.0, 1.0); // 2 / 2 = 1
     }
 
-    fn test_math_op(op: OpCode, operand_a: Value, operand_b: Value, result: Value) {
+    fn test_math_op(op: &OpCode, operand_a: Value, operand_b: Value, result: Value) {
         let chunk = build_binary_op_chunk(operand_a, operand_b, op);
-        return_equals(result, chunk);
+        return_equals(result, &chunk);
     }
 
-    fn build_binary_op_chunk(a: Value, b: Value, op: OpCode) -> Chunk {
+    fn build_binary_op_chunk(a: Value, b: Value, op: &OpCode) -> Chunk {
         Chunk::new()
             .write_constant(a, 1)
             .write_constant(b, 1)
             .write_chunk(op, 1)
-            .write_chunk(OpCode::Return, 1)
+            .write_chunk(&OpCode::Return, 1)
     }
 
-    fn return_equals(val: Value, chunk: Chunk) {
+    fn return_equals(val: Value, chunk: &Chunk) {
         if let VMResult::Okay(i) = VM::new().interpret(chunk) {
-            assert_eq!(val, i);
+            assert!(compare_values(val, i, 10));
         } else {
             panic!("return resulted in an error")
         }
