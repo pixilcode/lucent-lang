@@ -24,7 +24,7 @@ pub fn run() {
         // Check to see if it is a complete statement
         // and if it doesn't end in a semicolon, add one
         
-        let mut tokens = scanner::build_scanner(code.to_string());
+        let mut tokens = scanner::build_scanner(code);
         
         loop {
 			if tokens.current_token().token_type() == TokenType::EOF {

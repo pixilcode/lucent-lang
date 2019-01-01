@@ -14,18 +14,18 @@ fn main() {
     if args.len() == 1 {
         repl::run();
     } else if args.len() == 2 {
-        run_file(args[1].clone());
+        run_file(&args[1]);
     } else {
         eprintln!("Usage: clox [path]");
         process::exit(64);
     }
 }
 
-fn run_file(path: String) {
+fn run_file(path: &str) {
     let source = read_file(path);
     let vm = VM::new();
     
-    let scanner = scanner::build_scanner(source);
+    let scanner = scanner::build_scanner(&source);
     let chunk = compiler::compile(scanner);
     let result = vm.interpret(&chunk);
     
@@ -36,7 +36,7 @@ fn run_file(path: String) {
     }
 }
 
-fn read_file(_path: String) -> String {
+fn read_file(_path: &str) -> String {
     let code = String::new();
     fs::read_to_string(&code).unwrap();
     code

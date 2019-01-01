@@ -1,0 +1,19 @@
+impure fn main() {
+	
+}
+
+struct A {
+	
+}
+
+struct B {
+	
+}
+
+trait C {
+	
+}
+
+trait D {
+	
+}

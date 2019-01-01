@@ -36,14 +36,46 @@ fn get_point_three() {
 	Point {x: 2, y: 3} // Return a Point struct
 }
 
-impure fn print_point(point is (Int, Int)) { // point is an (Int, Int) tuple
+// point is an (Int, Int) tuple
+impure fn print_point(point is (Int, Int)) {
 	IO::println("x: ${ point(0) }, y: ${ point(1) }");
 }
 
-impure fn print_point(point is {x, y}) { // point is a record with an x field and a y field
+// point is a record with an x field and a y field
+impure fn print_point(point is {x, y}) {
 	IO::println("x: ${ point.x }, y: ${ point.y }");
 }
 
-impure fn print_point(point is Point) { // point is a Point struct
-	IO::println("x: ${ point.x }, y: ${ point.y }")
+// point is a Point struct
+impure fn print_point(point is Point) {
+	IO::println("x: ${ point.x }, y: ${ point.y }");
 }
+
+// point is a record with at least an x field and a y field
+// eg. {x, y}
+//     {x, y, a}
+//     {x, y, b}
+//     {x, y, a, b}
+impure fn print_point(point is {x, y, ...}) {
+	IO::println("x: ${ point.x }, y: ${ point.y }");
+}
+
+// Note: the above functions will be matched in order of definition
+//     ie. First it will check whether it is an (Int, Int) tuple,
+//         then it will check whether it is a {x, y} record,
+//         then it will check whether it is a Point,
+//         then it will check whether it has x and y fields
+
+// Note: the above functions could also be written as
+//
+// impure fn print_point(point)
+// where point is (Int, Int) {}
+// 
+// impure fn print_point(point)
+// where point is {x, y} {}
+// 
+// impure fn print_point(point)
+// where point is Point {}
+// 
+// impure fn print_point(point)
+// where point is {x, y, ...} {}
