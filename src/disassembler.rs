@@ -112,10 +112,11 @@ fn constant_instruction(
 #[cfg(test)]
 mod tests {
     use super::*;
+	use crate::value::Value;
 
     #[test]
     fn test_disassemble_chunk() {
-        let chunk = Chunk::new().write_constant(1.2, 1);
+        let chunk = Chunk::new().write_constant(Value::float(1.2), 1);
         let chunk = chunk.write_chunk(&OpCode::Return, 1);
         assert_eq!(
             "\

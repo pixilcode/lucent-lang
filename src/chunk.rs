@@ -119,7 +119,7 @@ impl Chunk {
 mod tests {
     use super::*;
     use std::collections::hash_map::HashMap;
-    use crate::value::compare_values;
+	use crate::value::Value;
 
     #[test]
     fn test_chunks() {
@@ -152,15 +152,14 @@ mod tests {
     #[test]
     fn test_constant() {
         let chunk = Chunk::new();
-        let chunk = chunk.write_constant(1.2, 1);
+        let chunk = chunk.write_constant(Value::float(1.2), 1);
 
         assert_eq!(OpCode::Constant.to_byte(), chunk.get_byte(0).unwrap());
         assert!(
-            compare_values(1.2,
+            Value::compare_values(Value::float(1.2),
             chunk
                 .get_constant(chunk.get_byte(1).unwrap() as usize)
-                .unwrap(),
-            2)
+                .unwrap())
         );
     }
 
@@ -168,20 +167,19 @@ mod tests {
     fn test_long_constant() {
         let chunk = Chunk::new();
         let chunk = write_constants(chunk, u8::max_value() as usize + 1);
-        let chunk = chunk.write_constant(0f64, 1);
+        let chunk = chunk.write_constant(Value::float(0f64), 1);
 
         assert_eq!(
             OpCode::ConstantLong.to_byte(),
             chunk.get_byte(512).unwrap()
         );
         assert!(
-            compare_values(0f64,
+            Value::compare_values(Value::float(0f64),
             chunk
                 .get_long_constant(
                     chunk.get_byte(513).unwrap() as usize,
                     chunk.get_byte(514).unwrap() as usize
-                ).unwrap(),
-            2)
+                ).unwrap())
         );
     }
     
@@ -190,7 +188,7 @@ mod tests {
         if fill == 0 {
             chunk
         } else {
-            write_constants(chunk.write_constant(fill as f64, 1), fill - 1)
+            write_constants(chunk.write_constant(Value::float(fill as f64), 1), fill - 1)
         }
     }
 }

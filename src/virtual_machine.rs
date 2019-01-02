@@ -1,6 +1,6 @@
 use crate::chunk::{Chunk, OpCode};
 use crate::disassembler::disassemble_instruction;
-use crate::value::{self, Value};
+use crate::value::Value;
 
 const STACK_MAX: usize = 256;
 
@@ -37,7 +37,7 @@ impl VM {
                         .into_iter()
                         .fold(String::new(), |collector, value| collector
                             + "[ "
-                            + &value::string_from(value)
+                            + &value.to_string()
                             + " ]")
                 );
             }
@@ -67,7 +67,7 @@ impl VM {
 
                     return VMResult::Okay(match stack.pop() {
                         Some(i) => i,
-                        None => 0f64,
+                        None => Value::float(0f64),
                     });
                 }
                 OpCode::Constant => {
@@ -79,13 +79,13 @@ impl VM {
                         Some(i) => i,
                         None => return VMResult::RuntimeError,
                     };
+					
+					if self.debug.print_constants {
+                        println!("{}", constant);
+                    }
 
                     if stack.push(constant).is_err() {
                         return VMResult::RuntimeError;
-                    }
-
-                    if self.debug.print_constants {
-                        println!("{}", value::string_from(constant));
                     }
 
                     ip + 1
@@ -104,13 +104,13 @@ impl VM {
                             Some(i) => i,
                             None => return VMResult::RuntimeError,
                         };
+					
+					if self.debug.print_constants {
+                        println!("{}", constant.to_string());
+                    }
 
                     if stack.push(constant).is_err() {
                         return VMResult::RuntimeError;
-                    }
-
-                    if self.debug.print_constants {
-                        println!("{}", value::string_from(constant));
                     }
 
                     ip + 2
@@ -120,34 +120,46 @@ impl VM {
                         Some(i) => i,
                         None => return VMResult::RuntimeError,
                     };
-                    if stack.push(-val).is_err() {
-                        return VMResult::RuntimeError;
-                    }
+					if !val.is_float() || stack.push(val.map_float(|val| -val)).is_err() {
+						return VMResult::RuntimeError;
+					}
                     ip
                 }
                 OpCode::Add => {
-                    stack = match VM::binary_op(stack, |a, b| a + b) {
+					let actions = vec![
+						(|a: &Value, b: &Value| a.is_float() && b.is_float(), |a: &Value, b: &Value| a.map_float(|a| a + b.as_float()))
+					];
+                    stack = match VM::binary_op(stack, actions) {
                         Ok(stack) => stack,
                         Err(result) => return result,
                     };
                     ip
                 }
                 OpCode::Subtract => {
-                    stack = match VM::binary_op(stack, |a, b| a - b) {
+					let actions = vec![
+						(|a: &Value, b: &Value| a.is_float() && b.is_float(), |a: &Value, b: &Value| a.map_float(|a| a - b.as_float()))
+					];
+                    stack = match VM::binary_op(stack, actions) {
                         Ok(stack) => stack,
                         Err(result) => return result,
                     };
                     ip
                 }
                 OpCode::Multiply => {
-                    stack = match VM::binary_op(stack, |a, b| a * b) {
+                    let actions = vec![
+						(|a: &Value, b: &Value| a.is_float() && b.is_float(), |a: &Value, b: &Value| a.map_float(|a| a * b.as_float()))
+					];
+                    stack = match VM::binary_op(stack, actions) {
                         Ok(stack) => stack,
                         Err(result) => return result,
                     };
                     ip
                 }
                 OpCode::Divide => {
-                    stack = match VM::binary_op(stack, |a, b| a / b) {
+                    let actions = vec![
+						(|a: &Value, b: &Value| a.is_float() && b.is_float(), |a: &Value, b: &Value| a.map_float(|a| a / b.as_float()))
+					];
+                    stack = match VM::binary_op(stack, actions) {
                         Ok(stack) => stack,
                         Err(result) => return result,
                     };
@@ -159,9 +171,10 @@ impl VM {
         }
     }
 
-    fn binary_op<F>(mut stack: Stack, op: F) -> Result<Stack, VMResult>
+    fn binary_op<F, G>(mut stack: Stack, actions: Vec<(F, G)>) -> Result<Stack, VMResult>
     where
-        F: Fn(Value, Value) -> Value,
+		F: Fn(&Value, &Value) -> bool,
+        G: Fn(&Value, &Value) -> Value,
     {
         let b = match stack.pop() {
             Some(i) => i,
@@ -171,7 +184,10 @@ impl VM {
             Some(i) => i,
             None => return Err(VMResult::RuntimeError),
         };
-        if stack.push(op(a, b)).is_err() {
+		
+		let result: Vec<_> = actions.iter().filter(|(predicate, _)| predicate(&a, &b)).map(|(_, op)| op(&a, &b)).collect();
+		
+		if result.len() != 1 || stack.push(result.into_iter().next().unwrap()).is_err() {
             Err(VMResult::RuntimeError)
         } else {
             Ok(stack)
@@ -259,14 +275,14 @@ pub enum VMResult {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::value::compare_values;
+	use crate::value::Value;
 
     #[test]
     fn test_return() {
         let chunk = Chunk::new()
-            .write_constant(1.0, 1)
+            .write_constant(Value::float(1.0), 1)
             .write_chunk(&OpCode::Return, 1);
-        return_equals(1.0, &chunk);
+        return_equals(Value::float(1.0), &chunk);
     }
 
     #[test]
@@ -277,9 +293,9 @@ mod tests {
         test_math_op(&OpCode::Divide, 2.0, 2.0, 1.0); // 2 / 2 = 1
     }
 
-    fn test_math_op(op: &OpCode, operand_a: Value, operand_b: Value, result: Value) {
-        let chunk = build_binary_op_chunk(operand_a, operand_b, op);
-        return_equals(result, &chunk);
+    fn test_math_op(op: &OpCode, operand_a: f64, operand_b: f64, result: f64) {
+        let chunk = build_binary_op_chunk(Value::float(operand_a), Value::float(operand_b), op);
+        return_equals(Value::float(result), &chunk);
     }
 
     fn build_binary_op_chunk(a: Value, b: Value, op: &OpCode) -> Chunk {
@@ -292,7 +308,7 @@ mod tests {
 
     fn return_equals(val: Value, chunk: &Chunk) {
         if let VMResult::Okay(i) = VM::new().interpret(chunk) {
-            assert!(compare_values(val, i, 10));
+            assert!(Value::compare_values(val, i));
         } else {
             panic!("return resulted in an error")
         }
