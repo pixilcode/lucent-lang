@@ -136,6 +136,7 @@ impl Value {
     }
 
     // Compare values
+    /// Compares values for equality
     pub fn compare_values(a: Value, b: Value) -> bool {
         match (a.data, b.data) {
             (DataType::Float(a), DataType::Float(b)) => {
