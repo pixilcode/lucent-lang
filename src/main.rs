@@ -1,12 +1,12 @@
-extern crate clox;
+extern crate lucent_lang;
 
 mod repl;
 
 use std::{env, process, fs};
 
-use clox::scanner;
-use clox::compiler;
-use clox::virtual_machine::{VM, VMResult};
+use lucent_lang::scanner;
+use lucent_lang::compiler;
+use lucent_lang::virtual_machine::{VM, VMResult};
 
 fn main() {
     let args: Vec<String> = env::args().collect();

@@ -1,5 +1,5 @@
 [package]
-name = "clox"
+name = "lucent_lang"
 version = "0.1.0"
 authors = ["Brendon Bown <bhbochikens@gmail.com>"]
 edition="2018"

@@ -1,7 +1,7 @@
 use std::io::{self, Write};
 
-use clox::scanner::{self, TokenType};
-use clox::virtual_machine::VM;
+use lucent_lang::scanner::{self, TokenType};
+use lucent_lang::virtual_machine::VM;
 
 pub fn run() {
     let _vm = VM::new();
