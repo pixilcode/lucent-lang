@@ -1,7 +1,7 @@
 // TODO Move this to VM module
 
-use std::convert::From;
 use crate::value::{Value, ValueArray};
+use std::convert::From;
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub enum OpCode {
@@ -118,8 +118,8 @@ impl Chunk {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::value::Value;
     use std::collections::hash_map::HashMap;
-	use crate::value::Value;
 
     #[test]
     fn test_chunks() {
@@ -155,12 +155,12 @@ mod tests {
         let chunk = chunk.write_constant(Value::float(1.2), 1);
 
         assert_eq!(OpCode::Constant.to_byte(), chunk.get_byte(0).unwrap());
-        assert!(
-            Value::compare_values(Value::float(1.2),
+        assert!(Value::compare_values(
+            Value::float(1.2),
             chunk
                 .get_constant(chunk.get_byte(1).unwrap() as usize)
-                .unwrap())
-        );
+                .unwrap()
+        ));
     }
 
     #[test]
@@ -169,20 +169,18 @@ mod tests {
         let chunk = write_constants(chunk, u8::max_value() as usize + 1);
         let chunk = chunk.write_constant(Value::float(0f64), 1);
 
-        assert_eq!(
-            OpCode::ConstantLong.to_byte(),
-            chunk.get_byte(512).unwrap()
-        );
-        assert!(
-            Value::compare_values(Value::float(0f64),
+        assert_eq!(OpCode::ConstantLong.to_byte(), chunk.get_byte(512).unwrap());
+        assert!(Value::compare_values(
+            Value::float(0f64),
             chunk
                 .get_long_constant(
                     chunk.get_byte(513).unwrap() as usize,
                     chunk.get_byte(514).unwrap() as usize
-                ).unwrap())
-        );
+                )
+                .unwrap()
+        ));
     }
-    
+
     // A recursive function that writes 'fill' number of constants to a chunk
     fn write_constants(chunk: Chunk, fill: usize) -> Chunk {
         if fill == 0 {

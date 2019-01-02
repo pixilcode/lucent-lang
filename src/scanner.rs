@@ -35,12 +35,7 @@ impl Scanner {
         if scanner.is_at_end(current) {
             return Scanner {
                 current: scanner.next.clone(),
-                next: Token::new(
-                    TokenType::EOF,
-                    "",
-                    scanner.line,
-                    scanner.column,
-                ),
+                next: Token::new(TokenType::EOF, "", scanner.line, scanner.column),
                 index: current,
                 ..scanner
             };
@@ -58,20 +53,32 @@ impl Scanner {
             '+' => scanner.add_token(TokenType::Plus, start, current),
             '/' => scanner.add_token(TokenType::Slash, start, current),
             '*' => scanner.add_token(TokenType::Star, start, current),
-            '!' if scanner.match_char('=', current + 1) => scanner.add_token(TokenType::BangEqual, start, current + 1),
+            '!' if scanner.match_char('=', current + 1) => {
+                scanner.add_token(TokenType::BangEqual, start, current + 1)
+            }
             '!' => scanner.add_token(TokenType::Bang, start, current),
-            '=' if scanner.match_char('=', current + 1) => scanner.add_token(TokenType::EqualEqual, start, current + 1),
+            '=' if scanner.match_char('=', current + 1) => {
+                scanner.add_token(TokenType::EqualEqual, start, current + 1)
+            }
             '=' => scanner.add_token(TokenType::Equal, start, current),
-            '<' if scanner.match_char('=', current + 1) => scanner.add_token(TokenType::LessEqual, start, current + 1),
+            '<' if scanner.match_char('=', current + 1) => {
+                scanner.add_token(TokenType::LessEqual, start, current + 1)
+            }
             '<' => scanner.add_token(TokenType::Less, start, current),
-            '>' if scanner.match_char('=', current + 1) => scanner.add_token(TokenType::GreaterEqual, start, current + 1),
+            '>' if scanner.match_char('=', current + 1) => {
+                scanner.add_token(TokenType::GreaterEqual, start, current + 1)
+            }
             '>' => scanner.add_token(TokenType::Greater, start, current),
             '"' => scanner.string(start, current),
             '1'...'9' => scanner.number(start, current, false),
             _ => {
                 let lexeme = scanner.get_lexeme(start, current).to_string();
-                scanner.error(start, current, "Invalid character: ".to_string() + lexeme.as_str())
-            },
+                scanner.error(
+                    start,
+                    current,
+                    "Invalid character: ".to_string() + lexeme.as_str(),
+                )
+            }
         }
     }
 
@@ -156,7 +163,7 @@ impl Scanner {
             }
         }
     }
-    
+
     fn string(self, start: usize, current: usize) -> Self {
         if self.match_char('"', current + 1) {
             let string = self.get_lexeme(start + 1, current).to_string();
@@ -165,26 +172,33 @@ impl Scanner {
             self.string(start, current + 1)
         }
     }
-    
+
     fn number(self, start: usize, current: usize, decimal_seen: bool) -> Self {
         println!("Shouldn't enter number");
         match self.get_char(current) {
             '0'...'9' => self.number(start, current + 1, decimal_seen),
-            '.' if !decimal_seen && !self.is_at_end(current + 1) && self.is_digit(current + 1) => self.number(start, current + 1, true),
+            '.' if !decimal_seen && !self.is_at_end(current + 1) && self.is_digit(current + 1) => {
+                self.number(start, current + 1, true)
+            }
             _ => match self.get_lexeme(start, current - 1).parse() {
-                Ok(value) =>  {
+                Ok(value) => {
                     let line = self.line;
                     let column = self.column + (current - start) as u32;
-                    self.add_token(TokenType::Number(value), start, current - 1).advance_to(current, line, column)
-                },
+                    self.add_token(TokenType::Number(value), start, current - 1)
+                        .advance_to(current, line, column)
+                }
                 Err(_) => {
                     let lexeme = self.get_lexeme(start, current - 1).to_string();
-                    self.error(start, current - 1, "Unable to parse number: ".to_string() + &lexeme)
+                    self.error(
+                        start,
+                        current - 1,
+                        "Unable to parse number: ".to_string() + &lexeme,
+                    )
                 }
-            }
+            },
         }
     }
-    
+
     fn get_char(&self, index: usize) -> char {
         if self.is_at_end(index) {
             '\u{0}'
@@ -196,7 +210,7 @@ impl Scanner {
     fn match_char(&self, character: char, index: usize) -> bool {
         !self.is_at_end(index) && self.get_char(index) == character
     }
-    
+
     fn get_lexeme(&self, start: usize, end: usize) -> &str {
         if !self.is_at_end(end) {
             &self.code[start..=end]
@@ -218,18 +232,13 @@ impl Scanner {
         let lexeme = self.get_lexeme(start, current);
         Scanner {
             current: self.next.clone(),
-            next: Token::new(
-                t_type,
-                lexeme,
-                self.line,
-                self.column,
-            ),
+            next: Token::new(t_type, lexeme, self.line, self.column),
             index: current + 1,
             column: self.column + (current - start) as u32 + 1,
             ..self
         }
     }
-    
+
     fn error(self, start: usize, end: usize, message: String) -> Self {
         Scanner {
             current: self.next.clone(),
@@ -239,7 +248,7 @@ impl Scanner {
             ..self
         }
     }
-    
+
     fn is_digit(&self, index: usize) -> bool {
         self.get_char(index).is_ascii_digit()
     }
@@ -352,51 +361,86 @@ mod tests {
 
     #[test]
     fn whitespace_skipping() {
-        let scanner = build_scanner(" ;\t\r\
+        let scanner = build_scanner(
+            " ;\t\r\
 // This = should be ignored
-/* This /* is /* a */ nested */ comment */;");
-        
-        assert_eq!(Token::new(TokenType::Semicolon, ";", 1, 2), scanner.current_token());
+/* This /* is /* a */ nested */ comment */;",
+        );
+
+        assert_eq!(
+            Token::new(TokenType::Semicolon, ";", 1, 2),
+            scanner.current_token()
+        );
         let scanner = scanner.scan_token();
-        assert_eq!(Token::new(TokenType::Semicolon, ";", 2, 43), scanner.current_token());
+        assert_eq!(
+            Token::new(TokenType::Semicolon, ";", 2, 43),
+            scanner.current_token()
+        );
         let scanner = scanner.scan_token();
-        assert_eq!(Token::new(TokenType::EOF, "", 2, 44), scanner.current_token());
+        assert_eq!(
+            Token::new(TokenType::EOF, "", 2, 44),
+            scanner.current_token()
+        );
     }
-    
+
     #[test]
     fn literal_scanning() {
         // String
         let scanner = build_scanner(" \"Hello\" \"\" ");
-        assert_eq!(Token::new(TokenType::String("Hello".to_string()), "\"Hello\"", 1, 2), scanner.current_token());
-        
+        assert_eq!(
+            Token::new(TokenType::String("Hello".to_string()), "\"Hello\"", 1, 2),
+            scanner.current_token()
+        );
+
         let scanner = scanner.scan_token();
-        assert_eq!(Token::new(TokenType::String("".to_string()), "\"\"", 1, 10), scanner.current_token());
-        
+        assert_eq!(
+            Token::new(TokenType::String("".to_string()), "\"\"", 1, 10),
+            scanner.current_token()
+        );
+
         // Int
         let scanner = build_scanner("123.");
-        assert_eq!(Token::new(TokenType::Number(123.0), "123", 1, 1), scanner.current_token());
-        
+        assert_eq!(
+            Token::new(TokenType::Number(123.0), "123", 1, 1),
+            scanner.current_token()
+        );
+
         let scanner = scanner.scan_token();
-        assert_eq!(Token::new(TokenType::Dot, ".", 1, 4), scanner.current_token());
-        
+        assert_eq!(
+            Token::new(TokenType::Dot, ".", 1, 4),
+            scanner.current_token()
+        );
+
         let scanner = build_scanner("123.0");
-        assert_eq!(Token::new(TokenType::Number(123.0), "123.0", 1, 1), scanner.current_token());
-        
+        assert_eq!(
+            Token::new(TokenType::Number(123.0), "123.0", 1, 1),
+            scanner.current_token()
+        );
+
         let scanner = build_scanner("123.0.1");
-        assert_eq!(Token::new(TokenType::Number(123.0), "123.0", 1, 1), scanner.current_token());
-        
+        assert_eq!(
+            Token::new(TokenType::Number(123.0), "123.0", 1, 1),
+            scanner.current_token()
+        );
+
         let scanner = scanner.scan_token();
-        assert_eq!(Token::new(TokenType::Dot, ".", 1, 6), scanner.current_token());
-        
+        assert_eq!(
+            Token::new(TokenType::Dot, ".", 1, 6),
+            scanner.current_token()
+        );
+
         let scanner = scanner.scan_token();
-        assert_eq!(Token::new(TokenType::Number(1.0), "1", 1, 7), scanner.current_token());
+        assert_eq!(
+            Token::new(TokenType::Number(1.0), "1", 1, 7),
+            scanner.current_token()
+        );
     }
-    
+
     #[test]
     fn identifier_recognition() {
         let scanner = build_scanner("");
     }
-    
+
     #[test]
     #[ignore]
     fn test_string_interpolation() {

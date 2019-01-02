@@ -2,11 +2,11 @@ extern crate lucent_lang;
 
 mod repl;
 
-use std::{env, process, fs};
+use std::{env, fs, process};
 
-use lucent_lang::scanner;
 use lucent_lang::compiler;
-use lucent_lang::virtual_machine::{VM, VMResult};
+use lucent_lang::scanner;
+use lucent_lang::virtual_machine::{VMResult, VM};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -24,11 +24,11 @@ fn main() {
 fn run_file(path: &str) {
     let source = read_file(path);
     let vm = VM::new();
-    
+
     let scanner = scanner::build_scanner(&source);
     let chunk = compiler::compile(scanner);
     let result = vm.interpret(&chunk);
-    
+
     match result {
         VMResult::Okay(_) => process::exit(0),
         VMResult::CompileError => process::exit(65),

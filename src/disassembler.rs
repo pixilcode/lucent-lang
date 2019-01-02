@@ -84,10 +84,11 @@ fn constant_instruction(
     };
 
     let constant = if is_long {
-        (constant << 8) + match chunk.get_byte(offset + 2) {
-            Some(i) => i as usize,
-            None => return (offset + 3, format!("{}UNEXPECTED_END_OF_CHUNK", result)),
-        }
+        (constant << 8)
+            + match chunk.get_byte(offset + 2) {
+                Some(i) => i as usize,
+                None => return (offset + 3, format!("{}UNEXPECTED_END_OF_CHUNK", result)),
+            }
     } else {
         constant
     };
@@ -112,7 +113,7 @@ fn constant_instruction(
 #[cfg(test)]
 mod tests {
     use super::*;
-	use crate::value::Value;
+    use crate::value::Value;
 
     #[test]
     fn test_disassemble_chunk() {

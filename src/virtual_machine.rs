@@ -79,8 +79,8 @@ impl VM {
                         Some(i) => i,
                         None => return VMResult::RuntimeError,
                     };
-					
-					if self.debug.print_constants {
+
+                    if self.debug.print_constants {
                         println!("{}", constant);
                     }
 
@@ -104,8 +104,8 @@ impl VM {
                             Some(i) => i,
                             None => return VMResult::RuntimeError,
                         };
-					
-					if self.debug.print_constants {
+
+                    if self.debug.print_constants {
                         println!("{}", constant.to_string());
                     }
 
@@ -120,15 +120,16 @@ impl VM {
                         Some(i) => i,
                         None => return VMResult::RuntimeError,
                     };
-					if !val.is_float() || stack.push(val.map_float(|val| -val)).is_err() {
-						return VMResult::RuntimeError;
-					}
+                    if !val.is_float() || stack.push(val.map_float(|val| -val)).is_err() {
+                        return VMResult::RuntimeError;
+                    }
                     ip
                 }
                 OpCode::Add => {
-					let actions = vec![
-						(|a: &Value, b: &Value| a.is_float() && b.is_float(), |a: &Value, b: &Value| a.map_float(|a| a + b.as_float()))
-					];
+                    let actions = vec![(
+                        |a: &Value, b: &Value| a.is_float() && b.is_float(),
+                        |a: &Value, b: &Value| a.map_float(|a| a + b.as_float()),
+                    )];
                     stack = match VM::binary_op(stack, actions) {
                         Ok(stack) => stack,
                         Err(result) => return result,
@@ -136,9 +137,10 @@ impl VM {
                     ip
                 }
                 OpCode::Subtract => {
-					let actions = vec![
-						(|a: &Value, b: &Value| a.is_float() && b.is_float(), |a: &Value, b: &Value| a.map_float(|a| a - b.as_float()))
-					];
+                    let actions = vec![(
+                        |a: &Value, b: &Value| a.is_float() && b.is_float(),
+                        |a: &Value, b: &Value| a.map_float(|a| a - b.as_float()),
+                    )];
                     stack = match VM::binary_op(stack, actions) {
                         Ok(stack) => stack,
                         Err(result) => return result,
@@ -146,9 +148,10 @@ impl VM {
                     ip
                 }
                 OpCode::Multiply => {
-                    let actions = vec![
-						(|a: &Value, b: &Value| a.is_float() && b.is_float(), |a: &Value, b: &Value| a.map_float(|a| a * b.as_float()))
-					];
+                    let actions = vec![(
+                        |a: &Value, b: &Value| a.is_float() && b.is_float(),
+                        |a: &Value, b: &Value| a.map_float(|a| a * b.as_float()),
+                    )];
                     stack = match VM::binary_op(stack, actions) {
                         Ok(stack) => stack,
                         Err(result) => return result,
@@ -156,9 +159,10 @@ impl VM {
                     ip
                 }
                 OpCode::Divide => {
-                    let actions = vec![
-						(|a: &Value, b: &Value| a.is_float() && b.is_float(), |a: &Value, b: &Value| a.map_float(|a| a / b.as_float()))
-					];
+                    let actions = vec![(
+                        |a: &Value, b: &Value| a.is_float() && b.is_float(),
+                        |a: &Value, b: &Value| a.map_float(|a| a / b.as_float()),
+                    )];
                     stack = match VM::binary_op(stack, actions) {
                         Ok(stack) => stack,
                         Err(result) => return result,
@@ -173,7 +177,7 @@ impl VM {
 
     fn binary_op<F, G>(mut stack: Stack, actions: Vec<(F, G)>) -> Result<Stack, VMResult>
     where
-		F: Fn(&Value, &Value) -> bool,
+        F: Fn(&Value, &Value) -> bool,
         G: Fn(&Value, &Value) -> Value,
     {
         let b = match stack.pop() {
@@ -184,10 +188,14 @@ impl VM {
             Some(i) => i,
             None => return Err(VMResult::RuntimeError),
         };
-		
-		let result: Vec<_> = actions.iter().filter(|(predicate, _)| predicate(&a, &b)).map(|(_, op)| op(&a, &b)).collect();
-		
-		if result.len() != 1 || stack.push(result.into_iter().next().unwrap()).is_err() {
+
+        let result: Vec<_> = actions
+            .iter()
+            .filter(|(predicate, _)| predicate(&a, &b))
+            .map(|(_, op)| op(&a, &b))
+            .collect();
+
+        if result.len() != 1 || stack.push(result.into_iter().next().unwrap()).is_err() {
             Err(VMResult::RuntimeError)
         } else {
             Ok(stack)
@@ -275,7 +283,7 @@ pub enum VMResult {
 #[cfg(test)]
 mod tests {
     use super::*;
-	use crate::value::Value;
+    use crate::value::Value;
 
     #[test]
     fn test_return() {
