@@ -53,24 +53,29 @@ impl Scanner {
             '+' => scanner.add_token(TokenType::Plus, start, current),
             '/' => scanner.add_token(TokenType::Slash, start, current),
             '*' => scanner.add_token(TokenType::Star, start, current),
+            '?' => scanner.add_token(TokenType::Question, start, current),
+            ':' => scanner.add_token(TokenType::Colon, start, current),
             '!' if scanner.match_char('=', current + 1) => {
                 scanner.add_token(TokenType::BangEqual, start, current + 1)
-            }
+            },
             '!' => scanner.add_token(TokenType::Bang, start, current),
             '=' if scanner.match_char('=', current + 1) => {
                 scanner.add_token(TokenType::EqualEqual, start, current + 1)
-            }
+            },
             '=' => scanner.add_token(TokenType::Equal, start, current),
             '<' if scanner.match_char('=', current + 1) => {
                 scanner.add_token(TokenType::LessEqual, start, current + 1)
-            }
+            },
             '<' => scanner.add_token(TokenType::Less, start, current),
             '>' if scanner.match_char('=', current + 1) => {
                 scanner.add_token(TokenType::GreaterEqual, start, current + 1)
-            }
+            },
             '>' => scanner.add_token(TokenType::Greater, start, current),
             '"' => scanner.string(start, current),
             '1'...'9' => scanner.number(start, current, false),
+            'A'...'Z' => scanner.identifier(start, current),
+            'a'...'z' => scanner.identifier(start, current),
+            '_' => scanner.identifier(start, current),
             _ => {
                 let lexeme = scanner.get_lexeme(start, current).to_string();
                 scanner.error(
@@ -198,6 +203,29 @@ impl Scanner {
             },
         }
     }
+    
+    fn identifier(self, start: usize, index: usize) -> Self {
+        let next_char = self.get_char(index + 1);
+        if !next_char.is_ascii_alphanumeric() && next_char != '_' {
+            let t_type = match self.get_lexeme(start, index){
+                "and" => TokenType::And,
+                "assert" => TokenType::Assert,
+                "else" => TokenType::Else,
+                "false" => TokenType::False,
+                "fn" => TokenType::Function,
+                "if" => TokenType::If,
+                "or" => TokenType::Or,
+                "return" => TokenType::Return,
+                "self" => TokenType::SelfKey,
+                "true" => TokenType::True,
+                "where" => TokenType::Where,
+                _ => TokenType::Identifier,
+            };
+            self.add_token(t_type, start, index)
+        } else {
+            self.identifier(start, index + 1)
+        }
+    }
 
     fn get_char(&self, index: usize) -> char {
         if self.is_at_end(index) {
@@ -309,6 +337,7 @@ pub enum TokenType {
     RightParen,
     LeftBrace,
     RightBrace,
+    Colon,
     Comma,
     Dot,
     Minus,
@@ -335,21 +364,17 @@ pub enum TokenType {
 
     // Keywords.
     And,
-    Class,
+    Assert,
     Else,
     False,
-    Fun,
-    For,
+    Function,
     If,
-    Nil,
+    Is,
     Or,
-    Print,
     Return,
-    Super,
-    This,
+    SelfKey, // Can't use 'Self'
     True,
-    Var,
-    While,
+    Where,
 
     Error,
     EOF,
@@ -438,12 +463,32 @@ mod tests {
 
     #[test]
     fn identifier_recognition() {
-        let scanner = build_scanner("");
+        let scanner = build_scanner("abc and def");
+        assert_eq!(
+            Token::new(TokenType::Identifier, "abc", 1, 1),
+            scanner.current_token()
+        );
+        
+        let scanner = scanner.scan_token();
+        assert_eq!(
+            Token::new(TokenType::And, "and", 1, 5),
+            scanner.current_token()
+        );
+        
+        let scanner = scanner.scan_token();
+        assert_eq!(
+            Token::new(TokenType::Identifier, "def", 1, 9),
+            scanner.current_token()
+        )
     }
 
     #[test]
     #[ignore]
     fn test_string_interpolation() {
+        let _scanner = build_scanner("\"This string has ${1 + 0} string interpolation\"");
+        let _scanner = build_scanner("\"This string ${\"has mixed ${\"interpolation\"}\"}\"");
+        let _scanner = build_scanner("\"Seems like a good place for ${recursion()}...?\"");
+        let _scanner = build_scanner("\"Also, interpolation should automatically convert ${to_string()}\"");
         unimplemented!(); // TODO add support for string interpolation
     }
 }
