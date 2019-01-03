@@ -28,10 +28,10 @@ impl Scanner {
     pub fn scan_token(self) -> Self {
         let scanner = Scanner::skip_whitespace(self);
         let index = scanner.index;
-        Scanner::scan_token_util(scanner, index, index)
+        Scanner::scan_token_util(scanner, index)
     }
 
-    fn scan_token_util(scanner: Scanner, start: usize, current: usize) -> Self {
+    fn scan_token_util(scanner: Scanner, current: usize) -> Self {
         if scanner.is_at_end(current) {
             return Scanner {
                 current: scanner.next.clone(),
@@ -42,44 +42,44 @@ impl Scanner {
         }
 
         match scanner.get_char(current) {
-            '(' => scanner.add_token(TokenType::LeftParen, start, current),
-            ')' => scanner.add_token(TokenType::RightParen, start, current),
-            '{' => scanner.add_token(TokenType::LeftBrace, start, current),
-            '}' => scanner.add_token(TokenType::RightBrace, start, current),
-            ';' => scanner.add_token(TokenType::Semicolon, start, current),
-            ',' => scanner.add_token(TokenType::Comma, start, current),
-            '.' => scanner.add_token(TokenType::Dot, start, current),
-            '-' => scanner.add_token(TokenType::Minus, start, current),
-            '+' => scanner.add_token(TokenType::Plus, start, current),
-            '/' => scanner.add_token(TokenType::Slash, start, current),
-            '*' => scanner.add_token(TokenType::Star, start, current),
-            '?' => scanner.add_token(TokenType::Question, start, current),
-            ':' => scanner.add_token(TokenType::Colon, start, current),
+            '(' => scanner.add_token(TokenType::LeftParen, current, current),
+            ')' => scanner.add_token(TokenType::RightParen, current, current),
+            '{' => scanner.add_token(TokenType::LeftBrace, current, current),
+            '}' => scanner.add_token(TokenType::RightBrace, current, current),
+            ';' => scanner.add_token(TokenType::Semicolon, current, current),
+            ',' => scanner.add_token(TokenType::Comma, current, current),
+            '.' => scanner.add_token(TokenType::Dot, current, current),
+            '-' => scanner.add_token(TokenType::Minus, current, current),
+            '+' => scanner.add_token(TokenType::Plus, current, current),
+            '/' => scanner.add_token(TokenType::Slash, current, current),
+            '*' => scanner.add_token(TokenType::Star, current, current),
+            '?' => scanner.add_token(TokenType::Question, current, current),
+            ':' => scanner.add_token(TokenType::Colon, current, current),
             '!' if scanner.match_char('=', current + 1) => {
-                scanner.add_token(TokenType::BangEqual, start, current + 1)
+                scanner.add_token(TokenType::BangEqual, current, current + 1)
             },
-            '!' => scanner.add_token(TokenType::Bang, start, current),
+            '!' => scanner.add_token(TokenType::Bang, current, current),
             '=' if scanner.match_char('=', current + 1) => {
-                scanner.add_token(TokenType::EqualEqual, start, current + 1)
+                scanner.add_token(TokenType::EqualEqual, current, current + 1)
             },
-            '=' => scanner.add_token(TokenType::Equal, start, current),
+            '=' => scanner.add_token(TokenType::Equal, current, current),
             '<' if scanner.match_char('=', current + 1) => {
-                scanner.add_token(TokenType::LessEqual, start, current + 1)
+                scanner.add_token(TokenType::LessEqual, current, current + 1)
             },
-            '<' => scanner.add_token(TokenType::Less, start, current),
+            '<' => scanner.add_token(TokenType::Less, current, current),
             '>' if scanner.match_char('=', current + 1) => {
-                scanner.add_token(TokenType::GreaterEqual, start, current + 1)
+                scanner.add_token(TokenType::GreaterEqual, current, current + 1)
             },
-            '>' => scanner.add_token(TokenType::Greater, start, current),
-            '"' => scanner.string(start, current),
-            '1'...'9' => scanner.number(start, current, false),
-            'A'...'Z' => scanner.identifier(start, current),
-            'a'...'z' => scanner.identifier(start, current),
-            '_' => scanner.identifier(start, current),
+            '>' => scanner.add_token(TokenType::Greater, current, current),
+            '"' => scanner.string(current, current),
+            '1'...'9' => scanner.number(current, current, false),
+            'A'...'Z' => scanner.identifier(current, current),
+            'a'...'z' => scanner.identifier(current, current),
+            '_' => scanner.identifier(current, current),
             _ => {
-                let lexeme = scanner.get_lexeme(start, current).to_string();
+                let lexeme = scanner.get_lexeme(current, current).to_string();
                 scanner.error(
-                    start,
+                    current,
                     current,
                     "Invalid character: ".to_string() + lexeme.as_str(),
                 )
