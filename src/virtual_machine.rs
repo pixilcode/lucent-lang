@@ -177,8 +177,8 @@ impl VM {
 
     fn binary_op<F, G>(mut stack: Stack, actions: Vec<(F, G)>) -> Result<Stack, VMResult>
     where
-        F: Fn(&Value, &Value) -> bool,
-        G: Fn(&Value, &Value) -> Value,
+        F: Fn(&Value, &Value) -> bool, // predicate
+        G: Fn(&Value, &Value) -> Value, // action
     {
         let b = match stack.pop() {
             Some(i) => i,
@@ -188,17 +188,24 @@ impl VM {
             Some(i) => i,
             None => return Err(VMResult::RuntimeError),
         };
-
-        let result: Vec<_> = actions
-            .iter()
+        
+        // Determine which actions apply,
+        // then apply those actions
+        // and take the first one
+        // (Actions should be listed in order
+        //  of precedence)
+        let result = actions.into_iter()
             .filter(|(predicate, _)| predicate(&a, &b))
             .map(|(_, op)| op(&a, &b))
-            .collect();
-
-        if result.len() != 1 || stack.push(result.into_iter().next().unwrap()).is_err() {
-            Err(VMResult::RuntimeError)
+            .next();
+        
+        if let Some(val) = result {
+            match stack.push(val) {
+                Ok(()) => Ok(stack),
+                Err(_) => Err(VMResult::RuntimeError),
+            }
         } else {
-            Ok(stack)
+            Err(VMResult::RuntimeError)
         }
     }
 }
