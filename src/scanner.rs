@@ -1,11 +1,12 @@
 pub fn build_scanner(code: &str) -> Scanner {
     let scanner = Scanner {
-        current: Token::error("No available token".to_string(), 1, 1), // The tokens have not yet been scanned
-        next: Token::error("No available token".to_string(), 1, 1),
+        current: Token::error("No available token".to_string(), "", 1, 1), // The tokens have not yet been scanned
+        next: Token::error("No available token".to_string(), "", 1, 1),
         code: code.to_string(),
         index: 0,
         line: 1,
         column: 1,
+        had_error: false,
     };
 
     scanner.scan_token().scan_token()
@@ -18,11 +19,16 @@ pub struct Scanner {
     index: usize,
     line: u32,
     column: u32,
+    had_error: bool,
 }
 
 impl Scanner {
     pub fn current_token(&self) -> Token {
         self.current.clone()
+    }
+    
+    pub fn had_error(&self) -> bool {
+        self.had_error
     }
 
     pub fn scan_token(self) -> Self {
@@ -268,11 +274,13 @@ impl Scanner {
     }
 
     fn error(self, start: usize, end: usize, message: String) -> Self {
+        let lexeme = self.get_lexeme(start, end);
         Scanner {
             current: self.next.clone(),
-            next: Token::error(message, self.line, self.column),
+            next: Token::error(message, lexeme, self.line, self.column),
             index: end + 1,
             column: self.column + (end - start) as u32,
+            had_error: true,
             ..self
         }
     }
@@ -304,10 +312,10 @@ impl Token {
         }
     }
 
-    fn error(message: String, line: u32, column: u32) -> Self {
+    fn error(message: String, lexeme: &str, line: u32, column: u32) -> Self {
         Token {
-            t_type: TokenType::Error,
-            lexeme: message,
+            t_type: TokenType::Error(message),
+            lexeme: lexeme.to_string(),
             line,
             column,
         }
@@ -376,7 +384,7 @@ pub enum TokenType {
     True,
     Where,
 
-    Error,
+    Error(String),
     EOF,
 }
 
