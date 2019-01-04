@@ -6,7 +6,6 @@ pub fn build_scanner(code: &str) -> Scanner {
         index: 0,
         line: 1,
         column: 1,
-        had_error: false,
     };
 
     scanner.scan_token().scan_token()
@@ -19,16 +18,11 @@ pub struct Scanner {
     index: usize,
     line: u32,
     column: u32,
-    had_error: bool,
 }
 
 impl Scanner {
     pub fn current_token(&self) -> Token {
         self.current.clone()
-    }
-    
-    pub fn had_error(&self) -> bool {
-        self.had_error
     }
 
     pub fn scan_token(self) -> Self {
@@ -280,7 +274,6 @@ impl Scanner {
             next: Token::error(message, lexeme, self.line, self.column),
             index: end + 1,
             column: self.column + (end - start) as u32,
-            had_error: true,
             ..self
         }
     }
