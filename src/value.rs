@@ -134,9 +134,7 @@ impl Value {
             _ => false,
         }
     }
-
-    // Compare values
-    /// Compares values for equality
+    
     pub fn compare_values(a: Value, b: Value) -> bool {
         match (a.data, b.data) {
             (DataType::Float(a), DataType::Float(b)) => {
@@ -176,8 +174,13 @@ impl ValueArray {
     }
 
     pub fn write_value(&mut self, value: Value) -> usize {
-        self.0.push(value);
-        self.0.len() - 1
+        match self.0.iter().enumerate().find(|(_, val)| value == **val) {
+            Some((index, _)) => index,
+            None => {
+                self.0.push(value);
+                self.0.len() - 1
+            }
+        }
     }
 
     pub fn get_constant(&self, constant_index: usize) -> Option<Value> {
