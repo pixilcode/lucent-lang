@@ -79,9 +79,7 @@ impl Scanner {
             '>' => scanner.add_token(TokenType::Greater, current, current),
             '"' => scanner.string(current, current),
             '1'...'9' => scanner.number(current, current, false),
-            'A'...'Z' => scanner.identifier(current, current),
-            'a'...'z' => scanner.identifier(current, current),
-            '_' => scanner.identifier(current, current),
+            'A'...'Z' | 'a'...'z' | '_' => scanner.identifier(current, current),
             _ => {
                 let lexeme = scanner.get_lexeme(current, current).to_string();
                 scanner.error(
@@ -214,12 +212,14 @@ impl Scanner {
         let next_char = self.get_char(index + 1);
         if !next_char.is_ascii_alphanumeric() && next_char != '_' {
             let t_type = match self.get_lexeme(start, index){
+                "_" => TokenType::Underscore,
                 "and" => TokenType::And,
                 "assert" => TokenType::Assert,
                 "else" => TokenType::Else,
                 "false" => TokenType::False,
                 "fn" => TokenType::Function,
                 "if" => TokenType::If,
+                "let" => TokenType::Let,
                 "or" => TokenType::Or,
                 "return" => TokenType::Return,
                 "self" => TokenType::SelfKey,
@@ -371,6 +371,7 @@ pub enum TokenType {
     Number(f64),
 
     // Keywords.
+    Underscore,
     And,
     Assert,
     Else,
@@ -378,6 +379,7 @@ pub enum TokenType {
     Function,
     If,
     Is,
+    Let,
     Or,
     Return,
     SelfKey, // Can't use 'Self'
